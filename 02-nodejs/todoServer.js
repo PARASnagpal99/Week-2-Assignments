@@ -18,7 +18,7 @@
     
   3. POST /todos - Create a new todo item
     Description: Creates a new todo item.
-    Request Body: JSON object representing the todo item.
+    Request Body: JSON object representing the todo  item.
     Response: 201 Created with the ID of the created todo item in JSON format. eg: {id: 1}
     Example: POST http://localhost:3000/todos
     Request Body: { "title": "Buy groceries", "completed": false, description: "I should buy groceries" }
@@ -40,10 +40,101 @@
   Testing the server - run `npm run test-todoServer` command in terminal
  */
 const express = require('express');
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser')
 
 const app = express();
 
 app.use(bodyParser.json());
+
+let todoItems = [
+      
+]
+
+app.get('/todos',(req,res)=>{
+    res.json(todoItems);
+})
+
+app.get('/todos/:id',(req,res)=>{
+  const todo = todoItems.find(t => t.id === parseInt(req.params.id));
+  if (!todo) {
+    res.status(404).send();
+  } else {
+    res.json(todo);
+  }
+})
+
+
+app.post('/todos',(req,res)=>{
+     const data = {
+      id: Math.floor(Math.random() * 1000000), // unique random id
+      title: req.body.title,
+      description: req.body.description
+    };
+  
+    todoItems.push(data);
+    res.status(201).json(data);
+})
+
+// app.put('/todos/:id',(req,res)=>{
+//   const ans = todoItems.filter((todoItem) => todoItem.id === (req.params.id - '0')) ;
+//   const temp = todoItems.filter((todoItem) => todoItem.id !== (req.params.id - '0')) ;
+//   console.log(req.params.id);
+//   console.log(ans);
+//   console.log(todoItems)
+//   if(ans.length == 0){
+//     res.status(404).send('Not Found');
+//   }else{
+//     const data = req.body ;
+//     data["id"] = req.params.id ;
+//     todoItems = [...temp , data];
+//     res.sendStatus(200);
+//   }
+// })
+app.put('/todos/:id', (req, res) => {
+  const idToUpdate = parseInt(req.params.id);
+  const updatedTodo = req.body;
+
+  const indexToUpdate = todoItems.findIndex(todoItem => todoItem.id === idToUpdate);
+
+  if (indexToUpdate !== -1) {
+      todoItems[indexToUpdate] = { ...updatedTodo, id: idToUpdate };
+      res.status(200).send();
+  } else {
+      res.status(404).send();
+  }
+});
+
+
+// app.delete('/todos/:id',(req,res)=>{
+//     const temp = todoItems.filter((todoItem) => todoItem.id !== (req.params.id - '0')) ;
+//     if(temp.length === todoItems.length){
+//        res.status(404).send('Item Not Found') ;
+//     }else{
+//        todoItems = temp ;
+//        res.sendStatus(200);
+//     }
+// })
+
+app.delete('/todos/:id', (req, res) => {
+  const idToDelete = parseInt(req.params.id);
+
+  const indexToDelete = todoItems.findIndex(todoItem => todoItem.id === idToDelete);
+
+  if (indexToDelete !== -1) {
+      todoItems.splice(indexToDelete, 1);
+      res.status(200).send();
+  } else {
+      res.status(404).send();
+  }
+});
+
+
+app.use((req,res,next)=>{
+  res.sendStatus(404).send();
+})
+
+app.listen(3000,()=>{
+  console.log("server is running on port 3000");
+})
 
 module.exports = app;
